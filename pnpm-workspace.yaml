@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+engineStrict: true
+
+# msgpackr-extract is an optional native accelerator of msgpackr (via bullmq): the pure JS
+# fallback is enough here, so its install script is explicitly denied.
+allowBuilds:
+  msgpackr-extract: false
