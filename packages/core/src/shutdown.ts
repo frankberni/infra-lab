@@ -6,7 +6,8 @@ export interface ShutdownStep {
   close: () => Promise<unknown>;
 }
 
-export const DEFAULT_SHUTDOWN_TIMEOUT_MS = 10_000;
+/** Below the 10 s grace period of `docker stop` before SIGKILL. */
+export const DEFAULT_SHUTDOWN_TIMEOUT_MS = 8_000;
 
 async function closeInOrder(steps: readonly ShutdownStep[], logger: Logger): Promise<boolean> {
   let clean = true;

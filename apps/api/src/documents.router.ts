@@ -34,7 +34,9 @@ export function createDocumentsRouter({ documents, enqueue, logger }: DocumentsR
       await enqueue(document.id);
     } catch (error) {
       logger.error({ err: error, documentId: document.id }, 'failed to enqueue document');
-      await documents.markFailed(document.id, ENQUEUE_FAILED_MESSAGE);
+      await documents.markFailed(document.id, ENQUEUE_FAILED_MESSAGE).catch((markError: unknown) => {
+        logger.error({ err: markError, documentId: document.id }, 'failed to mark document as failed');
+      });
       res.status(503).json({ error: 'Service Unavailable' });
       return;
     }

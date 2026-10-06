@@ -17,10 +17,10 @@ packages/core   @infra-lab/core    config, logger, pool pg, repository, coda, sh
 ## Avvio in locale
 
 ```bash
-docker run -d --name infra-lab-postgres -p 5432:5432 \
+docker run -d --name infra-lab-postgres -p 127.0.0.1:5432:5432 \
   -e POSTGRES_USER=infra_lab -e POSTGRES_PASSWORD=infra_lab -e POSTGRES_DB=infra_lab \
   postgres:18
-docker run -d --name infra-lab-redis -p 6379:6379 redis:8
+docker run -d --name infra-lab-redis -p 127.0.0.1:6379:6379 redis:8
 
 cp .env.example .env
 pnpm install
@@ -34,7 +34,7 @@ pnpm start:worker   # terminale 2
 `pnpm db:migrate` esegue il codice compilato, quindi va lanciato dopo `pnpm build`.
 In sviluppo, `pnpm dev:api` e `pnpm dev:worker` eseguono direttamente i sorgenti TypeScript con riavvio automatico (nessun build necessario).
 
-Arresto: `SIGTERM`/`SIGINT` (Ctrl+C) chiudono in ordine server HTTP, coda, Redis e pool Postgres; il worker attende la fine dei job attivi.
+Arresto: `SIGTERM`/`SIGINT` (Ctrl+C) chiudono in ordine server HTTP, coda, Redis e pool Postgres; il worker attende la fine dei job attivi fino a ~8 s, poi esce comunque.
 
 ## Endpoint
 
@@ -78,6 +78,11 @@ curl -s -i localhost:3000/health
 Con una dipendenza irraggiungibile la risposta è `503` con `{"status":"degraded","checks":{"postgres":"ok","redis":"unavailable"}}`.
 
 Codici di risposta: `POST` → `202`, `400` (body non valido o JSON malformato), `413` (body troppo grande), `503` (accodamento fallito, documento marcato `failed`). `GET /documents/:id` → `200`, `400` (id non UUID), `404`.
+
+## Limiti noti
+
+- Niente autenticazione, rate limiting né retention dei documenti, per scelta: vanno gestiti a livello di infrastruttura (gateway, reverse proxy, job di pulizia) prima di esporre l'API pubblicamente.
+- Il riassunto finto riporta frasi del testo originale e l'UUID del documento è l'unica chiave di accesso: chi lo conosce legge il risultato.
 
 ## Qualità
 

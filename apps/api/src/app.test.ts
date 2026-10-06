@@ -75,6 +75,19 @@ describe('api', () => {
       const [stored] = documents.documents.values();
       expect(stored?.status).toBe('failed');
     });
+
+    it('still responds 503 when marking the document failed also fails', async () => {
+      enqueue.mockRejectedValue(new Error('redis down'));
+      deps.documents = {
+        create: (text) => documents.create(text),
+        findById: (id) => documents.findById(id),
+        markFailed: () => Promise.reject(new Error('postgres down')),
+      };
+
+      const res = await request(createApp(deps)).post('/documents').send({ text: 'Hello world.' });
+
+      expect(res.status).toBe(503);
+    });
   });
 
   describe('GET /documents/:id', () => {
